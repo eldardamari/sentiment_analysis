@@ -36,3 +36,5 @@ build/
 #project dataset
 /dataset/
 dataset/
+/weka-3-6-11/
+weka-3-6-11/
