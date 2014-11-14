@@ -1,0 +1,63 @@
+require_relative 'tf.rb'
+require 'rjb'
+include Tf
+
+
+
+class Gt 
+    @@neg = @@pos = 0
+
+    def gt(num)
+        case num
+        when 1..2 
+            @@neg +=1
+            return 'negative'
+        when 3..5
+            @@pos +=1
+            return 'positive'
+        end
+    end
+
+    def neg
+        @@neg
+    end
+    
+    def pos
+        @@pos
+    end
+end
+
+i = 0
+f = File.open('./dataset/TA_wang_benchmark.tsv','r')
+new_file = File.new("./dataset/learn.arff", "w+")
+calc = Gt.new()
+
+
+new_file.puts('
+@RELATION   review_learn
+
+@ATTRIBUTE text     string
+@ATTRIBUTE class-att    {positive,negative}
+
+@data')
+
+f.each_line { |line| 
+    words = line.split("\t")
+
+    next if (words[1].to_i == 3 or 
+            (words[1].to_i >= 1 and words[1].to_i <= 2 && calc.neg() == 1000) or 
+            (words[1].to_i >=4 and words[1].to_i <= 5 and calc.pos() == 1000))
+
+    words[3] = words[3].gsub(/'/,"\\\\'").gsub(/"/,'\\\\"')
+
+    new_file.puts("'" + words[3].chop.chop + "'," + calc.gt(words[1].to_i))
+    puts "#{calc.neg()} - #{calc.pos()}"
+
+    if (calc.neg() == 1000)
+        break
+    end
+}
+f.close
+File.chmod(0777, './dataset/learn.arff')
+new_file.close
+            
