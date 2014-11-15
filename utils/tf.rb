@@ -1,4 +1,5 @@
 module Tf
+private 
     @@model = Hash.new(1)
 
 public
@@ -12,12 +13,12 @@ public
     end
 
     def train(features)
-        features.each { |word| model[word] +=1 }
-        return model
+        features.each { |word| @@model[word.to_sym] +=1 }
+        return @@model
     end
 
     def model
-        @@model
+        Hash[@@model.sort_by{|a,b| b}]
     end
 
 end
