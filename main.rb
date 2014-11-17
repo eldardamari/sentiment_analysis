@@ -86,15 +86,17 @@ def readfile(filecontent)
                full_stem_sen = "" 
                full_abbreviation_sen = "" 
                cnt_negations = 0
+               cnt_exclamation = document_text.count("!").to_s
+
         ################
             document_text_only_ascii.get(:sentences).each do |sentence|
 
                 sentence.get(:tokens).each do |word|
                     word_s = word.get(:original_text).to_s
 
-                   cnt_negations = @pos_and_neg_words[word_s.to_sym]==1 ?
-                                    cnt_negations +=1 : cnt_negations -=1
-                   p cnt_negations
+                    #count number of exclamation marks
+                    cnt_negations = @pos_and_neg_words[word_s.to_sym]==1 ?
+                        cnt_negations +=1 : cnt_negations -=1
 
                     #Abbreviation replacement
                     full_abbreviation_sen += 
@@ -105,13 +107,14 @@ def readfile(filecontent)
                 end
             end
 
-            cnt_negations =  cnt_negations >= 0 ? "1" : "0"
+            cnt_negations = cnt_negations >= 0 ? "1" : "0"
 
             @stem_docs[id.to_sym] = { gt: ground_truth, 
                                     wang: wang, 
                                     stanford_stem_sen: full_stem_sen,
                                     abbr_replace_sen: full_abbreviation_sen,
                                     cnt_negations: cnt_negations,
+                                    cnt_exclamation: cnt_exclamation,
                                     }
         ################
 			puts "\.\.\.done!"	
