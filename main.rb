@@ -1,5 +1,19 @@
 require_relative "./generate_file.rb"
 
+@abbreviations = Hash.new(0)
+
+def load_data_to_hash
+    f = File.open('./lexicons/lexicons/SlangLookupTable.txt','rb')
+    content = f.read
+
+    content.split(/[\r\n]/).each do |line|
+        next if line.empty?
+        words = line.force_encoding("BINARY").gsub(0xA0.chr,"")
+                    .split("\t",2)
+        @abbreviations[words[0].to_sym] = words[1]
+    end
+    f.close
+end
 
 def readfile(filecontent)
 
@@ -56,17 +70,28 @@ def readfile(filecontent)
 			pipeline.annotate(document_text_only_ascii)
 			@docs[cnt_docs] = document_text_only_ascii
                full_stem_sen = "" 
-                document_text_only_ascii.get(:sentences).each do |sentence|
+               full_abbreviation_sen = "" 
+        ################
+            document_text_only_ascii.get(:sentences).each do |sentence|
 
-                    # stem sentence
-                    sentence.get(:tokens).each do |word|
-                        full_stem_sen += word.get(:lemma).to_s + " "
-                    end
+                # stem sentence
+                sentence.get(:tokens).each do |word|
+
+                    #Abbreviation replacement
+                    full_abbreviation_sen += 
+                    ((replace =  @abbreviations[word.get(:original_text).to_s.to_sym]) != 0 ?
+                        replace.to_s : word.get(:value).to_s) + " " 
+                    #Stanford Stem
+                    full_stem_sen += word.get(:lemma).to_s + " "
                 end
+            end
 
             @stem_docs[id.to_sym] = { gt: ground_truth, 
                                     wang: wang, 
-                                    text: full_stem_sen}
+                                    stanford_stem_sen: full_stem_sen,
+                                    abbr_replace_sen: full_abbreviation_sen
+                                    }
+        ################
 			puts "\.\.\.done!"	
 		end
 		@numofdocs = cnt_docs
@@ -123,7 +148,8 @@ if __FILE__ == $0
 	
 	input   = File.open(start_options[:file],"rb")
 	content = input.read
-	readfile(content)
+    load_data_to_hash()
+    readfile(content)
 	#at = readstanfordoutput()
     create_file()
 	puts"finish"
