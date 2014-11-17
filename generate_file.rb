@@ -15,6 +15,7 @@ def create_file()
 @RELATION   review_learn
 
 @ATTRIBUTE text     string
+@ATTRIBUTE cnt_negations    {0,1}
 @ATTRIBUTE class-att    {positive,negative}
 
 @data')
@@ -23,7 +24,7 @@ def create_file()
 
         line[1][:abbr_replace_sen] = line[1][:abbr_replace_sen].gsub(/'/,"\\\\'").gsub(/"/,'\\\\"')
 
-        new_file.puts("'" + line[1][:abbr_replace_sen] + "'," + gt(line[1][:gt]))
+        new_file.puts("'"+ line[1][:abbr_replace_sen] + "'," + line[1][:cnt_negations] + "," + gt(line[1][:gt]))
     }
     File.chmod(0777,@output_filename)
     new_file.close

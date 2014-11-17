@@ -1,8 +1,10 @@
 require_relative "./generate_file.rb"
 
 @abbreviations = Hash.new(0)
+@pos_and_neg_words = Hash.new(0)
 
 def load_data_to_hash
+    #SlangLookupTable.txt
     f = File.open('./lexicons/lexicons/SlangLookupTable.txt','rb')
     content = f.read
 
@@ -11,6 +13,18 @@ def load_data_to_hash
         words = line.force_encoding("BINARY").gsub(0xA0.chr,"")
                     .split("\t",2)
         @abbreviations[words[0].to_sym] = words[1]
+    end
+    f.close
+    
+    #Hu and Bing Liu_positiveAndNegative-words.txt
+    f = File.open('./lexicons/lexicons/Hu and Bing Liu_positiveAndNegative-words.txt','rb')
+    content = f.read
+
+    content.split(/[\r\n]/).each do |line|
+        next if line.empty?
+        words = line.force_encoding("BINARY").gsub(0xA0.chr,"")
+                    .split(",")
+        @pos_and_neg_words[words[0].to_sym] = words[1].to_i
     end
     f.close
 end
@@ -71,25 +85,33 @@ def readfile(filecontent)
 			@docs[cnt_docs] = document_text_only_ascii
                full_stem_sen = "" 
                full_abbreviation_sen = "" 
+               cnt_negations = 0
         ################
             document_text_only_ascii.get(:sentences).each do |sentence|
 
-                # stem sentence
                 sentence.get(:tokens).each do |word|
+                    word_s = word.get(:original_text).to_s
+
+                   cnt_negations = @pos_and_neg_words[word_s.to_sym]==1 ?
+                                    cnt_negations +=1 : cnt_negations -=1
+                   p cnt_negations
 
                     #Abbreviation replacement
                     full_abbreviation_sen += 
-                    ((replace =  @abbreviations[word.get(:original_text).to_s.to_sym]) != 0 ?
-                        replace.to_s : word.get(:value).to_s) + " " 
+                    ((replace =  @abbreviations[word_s.to_sym]) != 0 ?
+                        replace.to_s : word_s) + " " 
                     #Stanford Stem
                     full_stem_sen += word.get(:lemma).to_s + " "
                 end
             end
 
+            cnt_negations =  cnt_negations >= 0 ? "1" : "0"
+
             @stem_docs[id.to_sym] = { gt: ground_truth, 
                                     wang: wang, 
                                     stanford_stem_sen: full_stem_sen,
-                                    abbr_replace_sen: full_abbreviation_sen
+                                    abbr_replace_sen: full_abbreviation_sen,
+                                    cnt_negations: cnt_negations,
                                     }
         ################
 			puts "\.\.\.done!"	
