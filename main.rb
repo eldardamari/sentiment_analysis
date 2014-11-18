@@ -87,13 +87,14 @@ def readfile(filecontent)
                full_abbreviation_sen = "" 
                cnt_negations = 0
                cnt_exclamation = document_text.count("!").to_s
+               has_repeated_characters = (document_text =~ /([a-z])\1\1+/) ?  "1" : "0"
 
         ################
             document_text_only_ascii.get(:sentences).each do |sentence|
 
                 sentence.get(:tokens).each do |word|
                     word_s = word.get(:original_text).to_s
-
+                    
                     #count number of exclamation marks
                     cnt_negations = @pos_and_neg_words[word_s.to_sym]==1 ?
                         cnt_negations +=1 : cnt_negations -=1
@@ -115,6 +116,7 @@ def readfile(filecontent)
                                     abbr_replace_sen: full_abbreviation_sen,
                                     cnt_negations: cnt_negations,
                                     cnt_exclamation: cnt_exclamation,
+                                    has_repeated_characters: has_repeated_characters,
                                     }
         ################
 			puts "\.\.\.done!"	

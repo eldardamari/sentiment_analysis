@@ -17,6 +17,7 @@ def create_file()
 @ATTRIBUTE text     string
 @ATTRIBUTE cnt_negations    {0,1}
 @ATTRIBUTE cnt_exclamation  numeric
+@ATTRIBUTE has_repeated_characters  {0,1}
 @ATTRIBUTE class-att    {positive,negative}
 
 @data')
@@ -28,6 +29,7 @@ def create_file()
         new_file.puts("'"+ line[1][:abbr_replace_sen] + "'," + \
                       line[1][:cnt_negations] + "," + \
                       line[1][:cnt_exclamation] + "," + \
+                      line[1][:has_repeated_characters] + "," + \
                       gt(line[1][:gt]))
     }
     File.chmod(0777,@output_filename)
