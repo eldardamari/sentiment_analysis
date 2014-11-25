@@ -5,7 +5,7 @@ require_relative "./generate_file.rb"
 
 def load_data_to_hash
     #SlangLookupTable.txt
-    f = File.open('./lexicons/lexicons/SlangLookupTable.txt','rb')
+    f = File.open(@slang_file,'rb')
     content = f.read
 
     content.split(/[\r\n]/).each do |line|
@@ -17,7 +17,7 @@ def load_data_to_hash
     f.close
     
     #Hu and Bing Liu_positiveAndNegative-words.txt
-    f = File.open('./lexicons/lexicons/Hu and Bing Liu_positiveAndNegative-words.txt','rb')
+    f = File.open('./lexicons/Hu and Bing Liu_positiveAndNegative-words.txt','rb')
     content = f.read
 
     content.split(/[\r\n]/).each do |line|
@@ -155,14 +155,16 @@ require 'stanford-core-nlp'
 if __FILE__ == $0
 	# every feature will be an option
 	start_options=Trollop::options do
-		opt :file, "input file. each line is a document", :default => './dataset/TA_wang_benchmark.tsv' # string
+		opt :file,          "Input file (dataset) to learn from.", :default => './dataset/TA_wang_benchmark.tsv' # string
+		opt :slang_file,    "Input feature file - frequent abbreviations, (i.e lol=laugh out loud, btw=by the way)", :default => './lexicons/SlangLookupTable.txt' # string
+		opt :pos_neg__file, "Input feature file - positive and negative words, (i.e wow = 1, bad = 0)", :default => './lexicons/Hu and Bing Liu_positiveAndNegative-words.txt' # string
 		#opt :Count_sentiment, "count the number of positive and negative words",  :default => 1
 		#opt :min_occurrences_to_include, "min_occurrences_to_include to include in top n" ,:short => "-o",:default => 2
-		opt :max_rows, "max_occurrences_to_include to include in top n" ,:short => "-O",:default => 50
+		opt :max_rows, "equal numbers of rows from positive and negative" ,:short => "-O",:default => 50
 		#opt :Top_n, "top n" , :short => "-n", :default => 3
 		#opt :dictionary_train_file, "the file used to calc word proportions", :short => "-t", :default => './example.txt'
 		#opt :dictionary_words, "the file containing phrases to calculate proportions on", :short => "-d", :default => './example.txt'
-        opt :output, "output learning .arff file", :short => "-f", :default => './dataset/learn.arff'
+        opt :output, "Output learning .arff file", :default => './dataset/learn.arff'
 	end
 
     p start_options
@@ -170,6 +172,8 @@ if __FILE__ == $0
 	@max_rows       = start_options[:max_rows]
 	input_filename  = start_options[:file]
 	@output_filename= start_options[:output]
+
+    @slang_file = start_options[:slang_file]
 	
 	Trollop::die :file, "must exist" unless File.exist?(start_options[:file]) if start_options[:file]
 	
