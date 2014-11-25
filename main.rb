@@ -85,7 +85,7 @@ def readfile(filecontent)
 			@docs[cnt_docs] = document_text_only_ascii
                full_stem_sen = "" 
                full_abbreviation_sen = "" 
-               cnt_negations = 0
+               is_positive_dominant = 0
                cnt_exclamation = document_text.count("!").to_s
                has_repeated_characters = (document_text =~ /([a-z])\1\1+/) ?  "1" : "0"
 
@@ -96,8 +96,8 @@ def readfile(filecontent)
                     word_s = word.get(:original_text).to_s
                     
                     #count number of exclamation marks
-                    cnt_negations = @pos_and_neg_words[word_s.to_sym]==1 ?
-                        cnt_negations +=1 : cnt_negations -=1
+                    is_positive_dominant = @pos_and_neg_words[word_s.to_sym]==1 ?
+                        is_positive_dominant +=1 : is_positive_dominant -=1
 
                     #Abbreviation replacement
                     full_abbreviation_sen += 
@@ -108,13 +108,13 @@ def readfile(filecontent)
                 end
             end
 
-            cnt_negations = cnt_negations >= 0 ? "1" : "0"
+            is_positive_dominant = is_positive_dominant >= 0 ? "1" : "0"
 
             @stem_docs[id.to_sym] = { gt: ground_truth, 
                                     wang: wang, 
                                     stanford_stem_sen: full_stem_sen,
                                     abbr_replace_sen: full_abbreviation_sen,
-                                    cnt_negations: cnt_negations,
+                                    is_positive_dominant: is_positive_dominant,
                                     cnt_exclamation: cnt_exclamation,
                                     has_repeated_characters: has_repeated_characters,
                                     }
