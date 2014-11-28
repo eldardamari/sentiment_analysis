@@ -51,100 +51,102 @@ def readfile(filecontent)
 		next if document_text=~/^ *$/
 			
 		
-			if document_text=~/^([^\t]+)\t([1-5]+)\t(\d+)\t(.*)$/
-                id = $1
-                ground_truth = $2.to_i
-                next if ground_truth == 3
-                wang = ( $3.to_i > 5 ? 5 : $3.to_i)
-                document_text = $4
+        if document_text=~/^([^\t]+)\t([1-5]+)\t(\d+)\t(.*)$/
+            id = $1
+            ground_truth = $2.to_i
+            next if ground_truth == 3
+            wang = ( $3.to_i > 5 ? 5 : $3.to_i)
+            document_text = $4
 
-                # create only @max_rows from each neg and pos 
-                next if ((ground_truth >= 1 and ground_truth <= 2 and neg == @max_rows ) or
-                        (ground_truth >= 4 and ground_truth <= 5 and pos == @max_rows ))
+            if @even_rows > 0
+                # create only @even_rows from each neg and pos 
+                next if ((ground_truth >= 1 and ground_truth <= 2 and neg == @even_rows ) or
+                         (ground_truth >= 4 and ground_truth <= 5 and pos == @even_rows ))
 
                 ground_truth > 3 ? pos+=1 : neg+=1
                 puts "N-#{neg} P-#{pos}"
-                if pos == @max_rows and neg == @max_rows
+                if pos == @even_rows and neg == @even_rows
                     break
-                end
-
-			else
-				puts "error - on line format:\n#{document_text}"
-				exit(0)
-			end
-			cnt_docs+=1
-			document_text_only_ascii=""
-			document_text.each_byte { |c|
-				# only the ascii characters are allowed
-				document_text_only_ascii+=c.chr if c==9 || c==10 || c==13 || (c > 31 && c < 127)
-			}
-			
-			print "\n annotating document: #{cnt_docs}"
-			document_text_only_ascii = StanfordCoreNLP::Annotation.new(document_text_only_ascii)
-			pipeline.annotate(document_text_only_ascii)
-			@docs[cnt_docs] = document_text_only_ascii
-               full_stem_sen = "" 
-               full_abbreviation_sen = "" 
-               is_positive_dominant = 0
-               cnt_exclamation = document_text.count("!").to_s
-               has_repeated_characters = (document_text =~ /([a-z])\1\1+/) ?  "1" : "0"
-
-        ################
-            document_text_only_ascii.get(:sentences).each do |sentence|
-
-                sentence.get(:tokens).each do |word|
-                    word_s = word.get(:original_text).to_s
-                    
-                    #count number of exclamation marks
-                    is_positive_dominant = @pos_and_neg_words[word_s.to_sym]==1 ?
-                        is_positive_dominant +=1 : is_positive_dominant -=1
-
-                    #Abbreviation replacement
-                    full_abbreviation_sen += 
-                    ((replace =  @abbreviations[word_s.to_sym]) != 0 ?
-                        replace.to_s : word_s) + " " 
-                    #Stanford Stem
-                    full_stem_sen += word.get(:lemma).to_s + " "
                 end
             end
 
-            is_positive_dominant = is_positive_dominant >= 0 ? "1" : "0"
+        else
+            puts "error - on line format:\n#{document_text}"
+            exit(0)
+        end
+        cnt_docs+=1
+        document_text_only_ascii=""
+        document_text.each_byte { |c|
+            # only the ascii characters are allowed
+            document_text_only_ascii+=c.chr if c==9 || c==10 || c==13 || (c > 31 && c < 127)
+        }
 
-            @stem_docs[id.to_sym] = { gt: ground_truth, 
-                                    wang: wang, 
-                                    stanford_stem_sen: full_stem_sen,
-                                    abbr_replace_sen: full_abbreviation_sen,
-                                    is_positive_dominant: is_positive_dominant,
-                                    cnt_exclamation: cnt_exclamation,
-                                    has_repeated_characters: has_repeated_characters,
-                                    }
+        print "\n annotating document: #{cnt_docs}"
+        document_text_only_ascii = StanfordCoreNLP::Annotation.new(document_text_only_ascii)
+        pipeline.annotate(document_text_only_ascii)
+        @docs[cnt_docs] = document_text_only_ascii
+        full_stem_sen = "" 
+        full_abbreviation_sen = "" 
+        is_positive_dominant = 0
+        cnt_exclamation = document_text.count("!").to_s
+        has_repeated_characters = (document_text =~ /([a-z])\1\1+/) ?  "1" : "0"
+
         ################
-			puts "\.\.\.done!"	
-		end
-		@numofdocs = cnt_docs
-		pipeline = nil
-		text = nil
-	end# 
+        document_text_only_ascii.get(:sentences).each do |sentence|
 
-def readstanfordoutput()
-		
-		#cnt_docs=1
+            sentence.get(:tokens).each do |word|
+                word_s = word.get(:original_text).to_s
 
-        @stem_docs.each do |steem_sentence|
-            #puts steem_sentence.inspect [:"id", {gt: 1-5, wang: 0-5, tex: review}]
+                #count number of exclamation marks
+                is_positive_dominant = @pos_and_neg_words[word_s.to_sym]==1 ?
+                    is_positive_dominant +=1 : is_positive_dominant -=1
+
+                #Abbreviation replacement
+                full_abbreviation_sen += 
+                    ((replace =  @abbreviations[word_s.to_sym]) != 0 ?
+                     replace.to_s : word_s) + " " 
+                #Stanford Stem
+                full_stem_sen += word.get(:lemma).to_s + " "
+            end
         end
 
-			#@docs.each do |doc|
-			#	
-			#	doc[1].get(:sentences).each do |sentence|
-			#		puts"#{sentence}"	
-			#	end # sentence
-				
-			#	cnt_docs+=1	
-            #end
-			
-			#return cnt_docs
-   end #add_feature_count_words
+        is_positive_dominant = is_positive_dominant >= 0 ? "1" : "0"
+
+        @stem_docs[id.to_sym] = { gt: ground_truth, 
+                                  wang: wang, 
+                                  stanford_stem_sen: full_stem_sen,
+                                  abbr_replace_sen: full_abbreviation_sen,
+                                  is_positive_dominant: is_positive_dominant,
+                                  cnt_exclamation: cnt_exclamation,
+                                  has_repeated_characters: has_repeated_characters,
+        }
+        ################
+        puts "\.\.\.done!"	
+        end
+        @numofdocs = cnt_docs
+        pipeline = nil
+        text = nil
+end# 
+
+def readstanfordoutput()
+
+    #cnt_docs=1
+
+    @stem_docs.each do |steem_sentence|
+        #puts steem_sentence.inspect [:"id", {gt: 1-5, wang: 0-5, tex: review}]
+    end
+
+    #@docs.each do |doc|
+    #	
+    #	doc[1].get(:sentences).each do |sentence|
+    #		puts"#{sentence}"	
+    #	end # sentence
+
+    #	cnt_docs+=1	
+    #end
+
+    #return cnt_docs
+end #add_feature_count_words
 
 
 ################# main - args #################
@@ -153,37 +155,35 @@ require 'stanford-core-nlp'
 
 
 if __FILE__ == $0
-	# every feature will be an option
-	start_options=Trollop::options do
-		opt :file,          "Input file (dataset) to learn from.", :default => './dataset/TA_wang_benchmark.tsv' # string
-		opt :slang_file,    "Input feature file - frequent abbreviations, (i.e lol=laugh out loud, btw=by the way)", :default => './lexicons/SlangLookupTable.txt' # string
-		opt :pos_neg_file, "Input feature file - positive and negative words, (i.e wow = 1, bad = 0)", :default => './lexicons/Hu and Bing Liu_positiveAndNegative-words.txt' # string
-		#opt :Count_sentiment, "count the number of positive and negative words",  :default => 1
-		#opt :min_occurrences_to_include, "min_occurrences_to_include to include in top n" ,:short => "-o",:default => 2
-		opt :max_rows, "equal numbers of rows from positive and negative" ,:short => "-O",:default => 50
-		#opt :Top_n, "top n" , :short => "-n", :default => 3
-		#opt :dictionary_train_file, "the file used to calc word proportions", :short => "-t", :default => './example.txt'
-		#opt :dictionary_words, "the file containing phrases to calculate proportions on", :short => "-d", :default => './example.txt'
+    # every feature will be an option
+    start_options=Trollop::options do
+        opt :file,          "Input file (dataset) to learn from.", :default => './dataset/TA_wang_benchmark.tsv' # string
+        opt :slang_file,    "Input feature file - frequent abbreviations, (i.e lol=laugh out loud, btw=by the way)", :default => './lexicons/SlangLookupTable.txt' # string
+        opt :pos_neg_file, "Input feature file - positive and negative words, (i.e wow = 1, bad = 0)", :default => './lexicons/Hu and Bing Liu_positiveAndNegative-words.txt' # string
+        opt :even_rows, "equal numbers of rows from positive and negative" ,:short => "-O",:default => 0
         opt :output, "output learning .arff file", :default => './dataset/learn.arff'
-	end
+        #opt :Top_n, "top n" , :short => "-n", :default => 3
+        #opt :dictionary_train_file, "the file used to calc word proportions", :short => "-t", :default => './example.txt'
+        #opt :dictionary_words, "the file containing phrases to calculate proportions on", :short => "-d", :default => './example.txt'
+    end
 
     p start_options
-	
-	@max_rows       = start_options[:max_rows]
-	input_filename  = start_options[:file]
-	@output_filename= start_options[:output]
+
+    @even_rows       = start_options[:even_rows]
+    input_filename  = start_options[:file]
+    @output_filename= start_options[:output]
 
     @slang_file = start_options[:slang_file]
     @pos_neg_file = start_options[:pos_neg_file]
-	
-	Trollop::die :file, "must exist" unless File.exist?(start_options[:file]) if start_options[:file]
-	
-	input   = File.open(start_options[:file],"rb")
-	content = input.read
+
+    Trollop::die :file, "must exist" unless File.exist?(start_options[:file]) if start_options[:file]
+
+    input   = File.open(start_options[:file],"rb")
+    content = input.read
     load_data_to_hash()
     readfile(content)
-	#at = readstanfordoutput()
+    #at = readstanfordoutput()
     create_file()
-	puts"finish"
-	
+    puts"finish"
+
 end
