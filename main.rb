@@ -118,7 +118,9 @@ def readfile(filecontent)
         has_repeated_characters = (document_text =~ /([a-z])\1\1+/i)  ?  "1" : "0"
         replace = ""
         strongsubj_weaksubj = 0
+        first_letter_upper_case = 0
 
+        # iterate each word in review
         document_text.split(" ").each do |word|
 
             #Abbreviation replacement
@@ -137,6 +139,9 @@ def readfile(filecontent)
             
             #count strongsubj_weaksubj pos/neg
             strongsubj_weaksubj += @strongsubj_weaksubj[word.to_sym]
+
+            #number_of_upper_case
+            if (word =~ /^[A-Z].*$/) == 0 then first_letter_upper_case +=1 end
         end
 
         ###############
@@ -176,6 +181,7 @@ def readfile(filecontent)
                                   has_more_positive_aspects: has_more_positive_aspects,
                                   document_length: document_length,
                                   strongsubj_weaksubj: strongsubj_weaksubj.to_s,
+                                  first_letter_upper_case: first_letter_upper_case.to_s,
         }
         open_file()
         write_to_file(line)
