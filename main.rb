@@ -119,6 +119,7 @@ def readfile(filecontent)
         replace = ""
         strongsubj_weaksubj = 0
         first_letter_upper_case = 0
+        number_of_upper_case = 0
 
         # iterate each word in review
         document_text.split(" ").each do |word|
@@ -140,8 +141,11 @@ def readfile(filecontent)
             #count strongsubj_weaksubj pos/neg
             strongsubj_weaksubj += @strongsubj_weaksubj[word.to_sym]
 
-            #number_of_upper_case
+            #number of words with first capital letter
             if (word =~ /^[A-Z].*$/) == 0 then first_letter_upper_case +=1 end
+
+            #number of words all capitilize
+            if (word =~ /^[A-Z'"`]+$/) == 0 then number_of_upper_case +=1 end
         end
 
         ###############
@@ -182,6 +186,7 @@ def readfile(filecontent)
                                   document_length: document_length,
                                   strongsubj_weaksubj: strongsubj_weaksubj.to_s,
                                   first_letter_upper_case: first_letter_upper_case.to_s,
+                                  number_of_upper_case: number_of_upper_case.to_s,
         }
         open_file()
         write_to_file(line)
