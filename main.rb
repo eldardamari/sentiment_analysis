@@ -1,8 +1,9 @@
 require_relative "./generate_file.rb"
 
-@abbreviations = Hash.new(0)
-@pos_and_neg_words = Hash.new(-1)
-@strongsubj_weaksubj = Hash.new(0) #strong-pos = 2 , strong-neg = -2 , weak-pos = 1 , weak-neg = -1
+@abbreviations      = Hash.new(0)
+@pos_and_neg_words  = Hash.new(-1)
+@strongsubj_weaksubj= Hash.new(0) #strong-pos = 2 , strong-neg = -2 , weak-pos = 1 , weak-neg = -1
+@question_words     = Hash.new(0)
 
 def load_data_to_hash
     #SlangLookupTable.txt
@@ -48,6 +49,17 @@ def load_data_to_hash
         else value = 0
         end
         @strongsubj_weaksubj[word.to_sym] = value
+    end
+    f.close
+    
+    #lexicons/QuestionWords
+    f = File.open(@question_words_file,'rb')
+    content = f.read
+
+    content.split(/[\r\n]/).each do |line| # word in a line
+        next if line.empty?
+        line.force_encoding("BINARY").gsub(0xA0.chr,"")
+        @question_words[line.to_sym] = 1
     end
     f.close
 end
@@ -146,6 +158,8 @@ def readfile(filecontent)
 
             #number of words all capitilize
             if (word =~ /^[A-Z'"`]+$/) == 0 then number_of_upper_case +=1 end
+
+            #has question words
         end
 
         ###############
@@ -233,6 +247,7 @@ if __FILE__ == $0
         opt :slang_file,    "Input feature file - frequent abbreviations, (i.e lol=laugh out loud, btw=by the way)", :default => './lexicons/SlangLookupTable.txt' # string
         opt :pos_neg_file, "Input feature file - positive and negative words, (i.e wow = 1, bad = 0)", :default => './lexicons/Hu and Bing Liu_positiveAndNegative-words.txt' # string
         opt :strongsubj_weaksubj_file, "Input feature file - strongsubj pos/neg - weaksubj pos/neg", :default => './lexicons/strongsubj_weaksubj.train' # string
+        opt :question_words_file, "Input feature file - list of question words", :default => './lexicons/QuestionWords.txt' # string
         opt :even_rows, "equal numbers of rows from positive and negative" ,:short => "-O",:default => 0
         opt :output, "output learning .arff file", :default => './dataset/learn.arff'
         #opt :Top_n, "top n" , :short => "-n", :default => 3
@@ -249,6 +264,7 @@ if __FILE__ == $0
     @slang_file = start_options[:slang_file]
     @pos_neg_file = start_options[:pos_neg_file]
     @strongsubj_weaksubj_file = start_options[:strongsubj_weaksubj_file]
+    @question_words_file = start_options[:question_words_file]
 
     Trollop::die :file, "must exist" unless File.exist?(start_options[:file]) if start_options[:file]
 
