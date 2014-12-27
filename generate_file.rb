@@ -46,6 +46,24 @@ def create_arff_file(output_filename)
 
     @new_file = File.new(@output_filename, "w+")
 
+    @new_file.puts('
+@RELATION   review_learn
+
+@ATTRIBUTE text     string
+@ATTRIBUTE is_positive_dominant    {0,1}
+@ATTRIBUTE cnt_exclamation  numeric
+@ATTRIBUTE has_repeated_characters  {0,1}
+@ATTRIBUTE has_more_positive_aspects  {0,1}
+@ATTRIBUTE document_length numeric 
+@ATTRIBUTE strongsubj_weaksubj numeric 
+@ATTRIBUTE first_letter_upper_case numeric 
+@ATTRIBUTE number_of_upper_case numeric 
+@ATTRIBUTE has_question_words  {0,1}
+
+@ATTRIBUTE class-att    {positive,negative}
+
+@data')
+
     File.chmod(0777,@output_filename)
     @new_file.close
 end
@@ -59,6 +77,9 @@ def write_to_file(line)
                   line[:has_more_positive_aspects] + "," + \
                   line[:document_length] + "," + \
                   line[:strongsubj_weaksubj] + "," + \
+                  line[:first_letter_upper_case] + "," + \
+                  line[:number_of_upper_case] + "," + \
+                  line[:has_question_words] + "," + \
                   gt(line[:gt]))
 end
     

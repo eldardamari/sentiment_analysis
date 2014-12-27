@@ -132,6 +132,7 @@ def readfile(filecontent)
         strongsubj_weaksubj = 0
         first_letter_upper_case = 0
         number_of_upper_case = 0
+        has_question_words = 0
 
         # iterate each word in review
         document_text.split(" ").each do |word|
@@ -160,6 +161,10 @@ def readfile(filecontent)
             if (word =~ /^[A-Z'"`]+$/) == 0 then number_of_upper_case +=1 end
 
             #has question words
+            if @question_words[word.to_sym] == 1 and has_question_words == 0
+                has_question_words = 1
+            end
+
         end
 
         ###############
@@ -188,6 +193,7 @@ def readfile(filecontent)
                                      @hash_system_results[id.to_sym][:negative].size) ? 
                                     "1" : "0"
         document_length = document_text.length.to_s
+        has_question_words = (has_question_words == 1) ? "1" : "0"
 
         line = { gt: ground_truth, 
                                   wang: wang, 
@@ -201,6 +207,7 @@ def readfile(filecontent)
                                   strongsubj_weaksubj: strongsubj_weaksubj.to_s,
                                   first_letter_upper_case: first_letter_upper_case.to_s,
                                   number_of_upper_case: number_of_upper_case.to_s,
+                                  has_question_words: has_question_words,
         }
         open_file()
         write_to_file(line)
